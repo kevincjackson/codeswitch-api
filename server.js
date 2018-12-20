@@ -30,37 +30,60 @@ const database = {
     {
       id: 1,
       content: "/* My C comment */",
+      correctness_upvotes: [1,2,3],
+      correctness_downvotes: [4],
+      design_upvotes: [1,2],
+      design_downvotes: [],
       feature_id: 1,
       language_id: 1,
-      rating: 0,
       source: "",
+      style_upvotes: [2,3,4],
+      style_downvotes: [5],
       user_id: 1
     },
     {
       id: 2,
       content: "// My single line comment\n\n/* My\n multiline\ncomment */",
+      correctness_upvotes: [],
+      correctness_downvotes: [],
+      design_upvotes: [],
+      design_downvotes: [],
       feature_id: 1,
       language_id: 2,
-      rating: 0,
+      ratings: [],
       source: "",
+      style_upvotes: [],
+      style_downvotes: [],
       user_id: 1
     },
     {
       id: 3,
       content: "# My Python comment",
+      correctness_upvotes: [],
+      correctness_downvotes: [],
+      design_upvotes: [],
+      design_downvotes: [],
       feature_id: 1,
       language_id: 3,
-      rating: 0,
+      ratings: [],
       source: "",
+      style_upvotes: [],
+      style_downvotes: [],
       user_id: 1
     },
     {
       id: 4,
       content: "int i = 42;",
+      correctness_upvotes: [],
+      correctness_downvotes: [],
+      design_upvotes: [],
+      design_downvotes: [],
       feature_id: 1,
       language_id: 1,
-      rating: 0,
+      ratings: [],
       source: "",
+      style_upvotes: [],
+      style_downvotes: [],
       user_id: 1
     },
     {
@@ -68,7 +91,7 @@ const database = {
       content: "const i = 42;",
       feature_id: 2,
       language_id: 2,
-      rating: 0,
+      ratings: [],
       source: "",
       user_id: 1
     },
@@ -77,7 +100,7 @@ const database = {
       content: "i = 42",
       feature_id: 2,
       language_id: 3,
-      rating: 0,
+      ratings: [],
       source: "",
       user_id: 1
     }
@@ -91,6 +114,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(cors());
 
 // Routes
+// Root Checks Server Status
 // -> Server Status {}
 app.get('/', (req, res) => {
   res.json("Server OK.");
@@ -104,12 +128,28 @@ app.get('/code_samples', (req, res) => {
 // Create new code sample
 // -> success || error
 app.post('/code_samples', (req, res) => {
-  let success = true;
-  if (success) {
-    res.json("Success.")
-  } else {
-    res.status(500).json("Server error.")
+  const { content, feature_id, language_id, source, user_id } = req.body;
+
+  // Validations
+  const errors = [];
+  if (!content || !feature_id || !language_id || !user_id) {
+    errors.push("Missing required data.");
   }
+
+  if (errors.length) {
+    return res.status(500).json(errors);
+  }
+
+  database.code_samples.push({
+    id: database.code_samples.length,
+    content: content,
+    feature_id: feature_id,
+    language_id: language_id,
+    source: source,
+    user_id: user_id
+  });
+
+  res.json("Success.")
 });
 
 // -> code_sample || error
@@ -143,14 +183,96 @@ app.put('/code_samples/:id/', (req, res) => {
   }
 });
 
-// -> [feature]
+// -> [Feature]
 app.get('/features', (req, res) => {
   res.json(database.features);
 });
 
+// -> Feature || Error
+app.post('/features', (req, res) => {
+  const { name } = req.body;
+  if (name) {
+    const new_feature = {
+      id: database.features[database.features.length - 1].id + 1,
+      name: name
+    }
+    database.features.push(new_feature);
+    res.json(new_feature);
+  } else {
+    res.status(400).json("Bad Request.");
+  }
+})
+
+// -> Feature || Error
+app.patch('/features/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const name = req.body.name;
+  const feature = database.features.find(f => f.id === id);
+  if (id && feature && name) {
+    feature.name = name;
+    res.json(feature);
+  } else {
+    res.status(400).json("Bad Request.");
+  }
+})
+
+// -> Success || Error
+app.delete('/features/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const feature = database.features.find(f => f.id === id);
+  if (id && feature) {
+    const updated_features = database.features.filter(f => f.id !== id);
+    database.features = updated_features;
+    res.json("Success");
+  } else {
+    res.status(400).json("Bad Request.");
+  }
+})
+
 // -> [language]
 app.get('/languages', (req, res) => {
   res.json(database.languages);
+});
+
+// -> Feature || Error
+app.post('/languages', (req, res) => {
+  const { name } = req.body;
+  if (name) {
+    const new_language = {
+      id: database.languages[database.languages.length - 1].id + 1,
+      name: name
+    }
+    database.languages.push(new_language);
+    res.json(new_language);
+  } else {
+    res.status(400).json("Bad Request.");
+  }
+});
+
+// -> Language || Error
+app.patch('/languages/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const name = req.body.name;
+  const language = database.languages.find(f => f.id === id);
+  if (id && language && name) {
+    language.name = name;
+    res.json(language);
+  } else {
+    res.status(400).json("Bad Request.");
+  }
+});
+
+// -> Success || Error
+app.delete('/languages/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const language = database.languages.find(f => f.id === id);
+  if (id && language) {
+    const updated_languages = database.languages.filter(f => f.id !== id);
+    database.languages = updated_languages;
+    res.json("Success");
+  } else {
+    res.status(400).json("Bad Request.");
+  }
 });
 
 // -> User || Error
