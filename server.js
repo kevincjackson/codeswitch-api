@@ -146,7 +146,13 @@ app.post('/code_samples', (req, res) => {
     feature_id: feature_id,
     language_id: language_id,
     source: source,
-    user_id: user_id
+    user_id: user_id,
+    correctness_upvotes: [],
+    correctness_downvotes: [],
+    design_upvotes: [],
+    design_downvotes: [],
+    style_upvotes: [],
+    style_downvotes: []
   });
 
   res.json("Success.")
