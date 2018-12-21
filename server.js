@@ -78,7 +78,7 @@ const database = {
       correctness_downvotes: [],
       design_upvotes: [],
       design_downvotes: [],
-      feature_id: 1,
+      feature_id: 2,
       language_id: 1,
       ratings: [],
       source: "",
@@ -118,6 +118,16 @@ app.use(cors());
 // -> Server Status {}
 app.get('/', (req, res) => {
   res.json("Server OK.");
+});
+
+// -> [codesample]
+app.post('/code_samples/search', (req, res) => {
+  const feature_ids = req.body.feature_ids.map(i => parseInt(i));
+  const language_ids = req.body.language_ids.map(i => parseInt(i));
+  const results = database.code_samples.filter(
+    cs => feature_ids.includes(cs.feature_id) && language_ids.includes(cs.language_id)
+  )
+  res.json(results);
 });
 
 // -> [codesample]
