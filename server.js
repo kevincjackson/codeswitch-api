@@ -373,5 +373,72 @@ app.post('/signup', (req, res) => {
   }
 });
 
+// -> Success || Error
+app.patch('/votes/:id', (req, res) => {
+
+  // Validations
+  const id = parseInt(req.params.id);
+  const cs = database.code_samples.find(f => f.id === id);
+  const user_id = parseInt(req.body.user_id);
+  const user = database.users.find(u => u.id === user_id);
+
+  // Response
+  if (cs && user) {
+    const { correctness, design, style } = req.body;
+    if (correctness === "upvote") {
+      cs.correctness_downvotes = cs.correctness_downvotes.filter(id => id !== user_id)
+      if (!cs.correctness_upvotes.includes(user_id)) {
+        cs.correctness_upvotes.push(user_id);
+      }
+    }
+    if (correctness === "novote") {
+      cs.correctness_upvotes = cs.correctness_upvotes.filter(id => id !== user_id)
+      cs.correctness_downvotes = cs.correctness_downvotes.filter(id => id !== user_id)
+    }
+    if (correctness === "downvote") {
+      cs.correctness_upvotes = cs.correctness_upvotes.filter(id => id !== user_id)
+      if (!cs.correctness_downvotes.includes(user_id)) {
+        cs.correctness_downvotes.push(user_id);
+      }
+    }
+    if (design === "upvote") {
+      cs.design_downvotes = cs.design_downvotes.filter(id => id !== user_id)
+      if (!cs.design_upvotes.includes(user_id)) {
+        cs.design_upvotes.push(user_id);
+      }
+    }
+    if (design === "novote") {
+      cs.design_upvotes = cs.design_upvotes.filter(id => id !== user_id)
+      cs.design_downvotes = cs.design_downvotes.filter(id => id !== user_id)
+    }
+    if (design === "downvote") {
+      cs.design_upvotes = cs.design_upvotes.filter(id => id !== user_id)
+      if (!cs.design_downvotes.includes(user_id)) {
+        cs.design_downvotes.push(user_id);
+      }
+    }
+    if (style === "upvote") {
+      cs.style_downvotes = cs.style_downvotes.filter(id => id !== user_id)
+      if (!cs.style_upvotes.includes(user_id)) {
+        cs.style_upvotes.push(user_id);
+      }
+    }
+    if (style === "novote") {
+      cs.style_upvotes = cs.style_upvotes.filter(id => id !== user_id)
+      cs.style_downvotes = cs.style_downvotes.filter(id => id !== user_id)
+    }
+    if (style === "downvote") {
+      cs.style_upvotes = cs.style_upvotes.filter(id => id !== user_id)
+      if (!cs.style_downvotes.includes(user_id)) {
+        cs.style_downvotes.push(user_id);
+      }
+    }
+    res.json('Success.');
+  } else {
+    res.status(400).json("Bad Request.");
+  }
+});
+
+
 // Launch
 app.listen(port);
