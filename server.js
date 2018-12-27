@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const app = express();
 const port = 3000;
-const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt-nodejs');
-const cors = require('cors');
+const bodyParser = require("body-parser");
+const bcrypt = require("bcrypt-nodejs");
+const cors = require("cors");
 const database = {
   users: [
     {
@@ -134,36 +134,38 @@ const database = {
 };
 
 // Middleware
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + "/public"));
 app.use(cors());
 
 // Routes
 // Root Checks Server Status
 // -> Server Status {}
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.json("Server OK.");
 });
 
 // -> [codesample]
-app.post('/code_samples/search', (req, res) => {
+app.post("/code_samples/search", (req, res) => {
   const feature_ids = req.body.feature_ids.map(i => parseInt(i));
   const language_ids = req.body.language_ids.map(i => parseInt(i));
   const results = database.code_samples.filter(
-    cs => feature_ids.includes(cs.feature_id) && language_ids.includes(cs.language_id)
-  )
+    cs =>
+      feature_ids.includes(cs.feature_id) &&
+      language_ids.includes(cs.language_id)
+  );
   res.json(results);
 });
 
 // -> [codesample]
-app.get('/code_samples', (req, res) => {
+app.get("/code_samples", (req, res) => {
   res.json(database.code_samples);
 });
 
 // Create new code sample
 // -> success || error
-app.post('/code_samples', (req, res) => {
+app.post("/code_samples", (req, res) => {
   const { content, feature_id, language_id, source, user_id } = req.body;
 
   // Validations
@@ -177,7 +179,7 @@ app.post('/code_samples', (req, res) => {
   }
 
   database.code_samples.push({
-    id: database.code_samples.length,
+    id: database.code_samples[database.code_samples.length - 1].id + 1,
     content: content,
     feature_id: parseInt(feature_id),
     language_id: parseInt(language_id),
@@ -191,11 +193,11 @@ app.post('/code_samples', (req, res) => {
     style_downvotes: []
   });
 
-  res.json("Success.")
+  res.json("Success.");
 });
 
 // -> code_sample || error
-app.get('/code_samples/:id/', (req, res) => {
+app.get("/code_samples/:id/", (req, res) => {
   const id = parseInt(req.params.id);
   const code_sample = database.code_samples.find(cs => cs.id === id);
   if (code_sample) {
@@ -206,47 +208,47 @@ app.get('/code_samples/:id/', (req, res) => {
 });
 
 // TODO -> success || error
-app.put('/code_samples/:id/', (req, res) => {
+app.put("/code_samples/:id/", (req, res) => {
   let success = true;
   if (success) {
-    res.json("Success.")
+    res.json("Success.");
   } else {
-    res.status(500).json("Server error.")
+    res.status(500).json("Server error.");
   }
 });
 
 // TODO -> success || error
-app.put('/code_samples/:id/', (req, res) => {
+app.put("/code_samples/:id/", (req, res) => {
   let success = true;
   if (success) {
-    res.json("Success.")
+    res.json("Success.");
   } else {
-    res.status(500).json("Server error.")
+    res.status(500).json("Server error.");
   }
 });
 
 // -> [Feature]
-app.get('/features', (req, res) => {
+app.get("/features", (req, res) => {
   res.json(database.features);
 });
 
 // -> Feature || Error
-app.post('/features', (req, res) => {
+app.post("/features", (req, res) => {
   const { name } = req.body;
   if (name) {
     const new_feature = {
       id: database.features[database.features.length - 1].id + 1,
       name: name
-    }
+    };
     database.features.push(new_feature);
     res.json(new_feature);
   } else {
     res.status(400).json("Bad Request.");
   }
-})
+});
 
 // -> Feature || Error
-app.patch('/features/:id', (req, res) => {
+app.patch("/features/:id", (req, res) => {
   const id = parseInt(req.params.id);
   const name = req.body.name;
   const feature = database.features.find(f => f.id === id);
@@ -256,10 +258,10 @@ app.patch('/features/:id', (req, res) => {
   } else {
     res.status(400).json("Bad Request.");
   }
-})
+});
 
 // -> Success || Error
-app.delete('/features/:id', (req, res) => {
+app.delete("/features/:id", (req, res) => {
   const id = parseInt(req.params.id);
   const feature = database.features.find(f => f.id === id);
   if (id && feature) {
@@ -269,21 +271,21 @@ app.delete('/features/:id', (req, res) => {
   } else {
     res.status(400).json("Bad Request.");
   }
-})
+});
 
 // -> [language]
-app.get('/languages', (req, res) => {
+app.get("/languages", (req, res) => {
   res.json(database.languages);
 });
 
 // -> Feature || Error
-app.post('/languages', (req, res) => {
+app.post("/languages", (req, res) => {
   const { name } = req.body;
   if (name) {
     const new_language = {
       id: database.languages[database.languages.length - 1].id + 1,
       name: name
-    }
+    };
     database.languages.push(new_language);
     res.json(new_language);
   } else {
@@ -292,7 +294,7 @@ app.post('/languages', (req, res) => {
 });
 
 // -> Language || Error
-app.patch('/languages/:id', (req, res) => {
+app.patch("/languages/:id", (req, res) => {
   const id = parseInt(req.params.id);
   const name = req.body.name;
   const language = database.languages.find(f => f.id === id);
@@ -305,7 +307,7 @@ app.patch('/languages/:id', (req, res) => {
 });
 
 // -> Success || Error
-app.delete('/languages/:id', (req, res) => {
+app.delete("/languages/:id", (req, res) => {
   const id = parseInt(req.params.id);
   const language = database.languages.find(f => f.id === id);
   if (id && language) {
@@ -318,7 +320,7 @@ app.delete('/languages/:id', (req, res) => {
 });
 
 // -> User || Error
-app.post('/signin', (req, res) => {
+app.post("/signin", (req, res) => {
   const { email, password } = req.body;
   const user = database.users.find(u => u.email == email);
   if (!user) {
@@ -334,7 +336,7 @@ app.post('/signin', (req, res) => {
 });
 
 // -> User || Error
-app.post('/signup', (req, res) => {
+app.post("/signup", (req, res) => {
   const { email, password, username } = req.body;
 
   // Validations
@@ -343,7 +345,7 @@ app.post('/signup', (req, res) => {
     errors.push("Invalid email.");
   }
   if (database.users.find(u => u.email === email)) {
-    errors.push("Email taken.")
+    errors.push("Email taken.");
   }
   if (!password || password.length === 0) {
     errors.push("Invalid password.");
@@ -373,9 +375,20 @@ app.post('/signup', (req, res) => {
   }
 });
 
-// -> Success || Error
-app.post('/vote', (req, res) => {
+// -> [{id: Int, username: String }]
+app.get("/usernames", (req, res) => {
+  const usernames = database.users.map(u => {
+    return { id: u.id, username: u.username };
+  });
+  if (usernames) {
+    res.json(usernames);
+  } else {
+    res.status(400).json("Bad request");
+  }
+});
 
+// -> Success || Error
+app.post("/vote", (req, res) => {
   // Validations
   const cs_id = parseInt(req.body.cs_id);
   const cs = database.code_samples.find(cs => cs.id === cs_id);
@@ -386,59 +399,66 @@ app.post('/vote', (req, res) => {
   if (cs && user) {
     const { correctness, design, style } = req.body;
     if (correctness === "upvote") {
-      cs.correctness_downvotes = cs.correctness_downvotes.filter(id => id !== user_id)
+      cs.correctness_downvotes = cs.correctness_downvotes.filter(
+        id => id !== user_id
+      );
       if (!cs.correctness_upvotes.includes(user_id)) {
         cs.correctness_upvotes.push(user_id);
       }
     }
     if (correctness === "novote") {
-      cs.correctness_upvotes = cs.correctness_upvotes.filter(id => id !== user_id)
-      cs.correctness_downvotes = cs.correctness_downvotes.filter(id => id !== user_id)
+      cs.correctness_upvotes = cs.correctness_upvotes.filter(
+        id => id !== user_id
+      );
+      cs.correctness_downvotes = cs.correctness_downvotes.filter(
+        id => id !== user_id
+      );
     }
     if (correctness === "downvote") {
-      cs.correctness_upvotes = cs.correctness_upvotes.filter(id => id !== user_id)
+      cs.correctness_upvotes = cs.correctness_upvotes.filter(
+        id => id !== user_id
+      );
       if (!cs.correctness_downvotes.includes(user_id)) {
         cs.correctness_downvotes.push(user_id);
       }
     }
     if (design === "upvote") {
-      cs.design_downvotes = cs.design_downvotes.filter(id => id !== user_id)
+      cs.design_downvotes = cs.design_downvotes.filter(id => id !== user_id);
       if (!cs.design_upvotes.includes(user_id)) {
         cs.design_upvotes.push(user_id);
       }
     }
     if (design === "novote") {
-      cs.design_upvotes = cs.design_upvotes.filter(id => id !== user_id)
-      cs.design_downvotes = cs.design_downvotes.filter(id => id !== user_id)
+      cs.design_upvotes = cs.design_upvotes.filter(id => id !== user_id);
+      cs.design_downvotes = cs.design_downvotes.filter(id => id !== user_id);
     }
     if (design === "downvote") {
-      cs.design_upvotes = cs.design_upvotes.filter(id => id !== user_id)
+      cs.design_upvotes = cs.design_upvotes.filter(id => id !== user_id);
       if (!cs.design_downvotes.includes(user_id)) {
         cs.design_downvotes.push(user_id);
       }
     }
     if (style === "upvote") {
-      cs.style_downvotes = cs.style_downvotes.filter(id => id !== user_id)
+      cs.style_downvotes = cs.style_downvotes.filter(id => id !== user_id);
       if (!cs.style_upvotes.includes(user_id)) {
         cs.style_upvotes.push(user_id);
       }
     }
     if (style === "novote") {
-      cs.style_upvotes = cs.style_upvotes.filter(id => id !== user_id)
-      cs.style_downvotes = cs.style_downvotes.filter(id => id !== user_id)
+      cs.style_upvotes = cs.style_upvotes.filter(id => id !== user_id);
+      cs.style_downvotes = cs.style_downvotes.filter(id => id !== user_id);
     }
     if (style === "downvote") {
-      cs.style_upvotes = cs.style_upvotes.filter(id => id !== user_id)
+      cs.style_upvotes = cs.style_upvotes.filter(id => id !== user_id);
       if (!cs.style_downvotes.includes(user_id)) {
         cs.style_downvotes.push(user_id);
       }
     }
-    res.json('Success.');
+    res.json("Success.");
   } else {
     res.status(400).json("Bad Request.");
   }
 });
-
 
 // Launch
 app.listen(port);
