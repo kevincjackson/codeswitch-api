@@ -30,15 +30,15 @@ const database = {
     {
       id: 1,
       content: "/* My C comment */",
-      correctness_upvotes: [1,2,3],
-      correctness_downvotes: [4],
-      design_upvotes: [1,2],
+      correctness_upvotes: [],
+      correctness_downvotes: [],
+      design_upvotes: [],
       design_downvotes: [],
       feature_id: 1,
       language_id: 1,
       source: "",
-      style_upvotes: [2,3,4],
-      style_downvotes: [5],
+      style_upvotes: [],
+      style_downvotes: [],
       user_id: 1
     },
     {
@@ -374,11 +374,11 @@ app.post('/signup', (req, res) => {
 });
 
 // -> Success || Error
-app.patch('/votes/:id', (req, res) => {
+app.post('/vote', (req, res) => {
 
   // Validations
-  const id = parseInt(req.params.id);
-  const cs = database.code_samples.find(f => f.id === id);
+  const cs_id = parseInt(req.body.cs_id);
+  const cs = database.code_samples.find(cs => cs.id === cs_id);
   const user_id = parseInt(req.body.user_id);
   const user = database.users.find(u => u.id === user_id);
 
