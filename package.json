@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "brew services start postgresql && nodemon server.js",
+    "stop": "brew services stop postgresql"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +14,9 @@
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "knex": "^0.16.3",
+    "pg": "^7.7.1"
   },
   "devDependencies": {
     "nodemon": "^1.18.9"

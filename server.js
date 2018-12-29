@@ -4,134 +4,15 @@ const port = 3000;
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt-nodejs");
 const cors = require("cors");
-const database = {
-  users: [
-    {
-      admin: true,
-      email: "kevin@example.com",
-      hash: "$2a$10$yvhRTCkCGb72nR8kk1Ia3OYZiPiilD4NtAkUl/RIAjkMufI0B9Nem",
-      id: 1,
-      moderator: true,
-      username: "kj"
-    }
-  ],
-  languages: [
-    { id: 1, name: "C" },
-    { id: 2, name: "Javascript" },
-    { id: 3, name: "Python" }
-  ],
-  features: [
-    { id: 1, name: "Comment" },
-    { id: 2, name: "Variable Declaration" },
-    { id: 3, name: "Loop" },
-    { id: 4, name: "Hello World" }
-  ],
-  code_samples: [
-    {
-      id: 1,
-      content: "/* My C comment */",
-      correctness_upvotes: [],
-      correctness_downvotes: [],
-      design_upvotes: [],
-      design_downvotes: [],
-      feature_id: 1,
-      language_id: 1,
-      source: "",
-      style_upvotes: [],
-      style_downvotes: [],
-      user_id: 1
-    },
-    {
-      id: 2,
-      content: "// My single line comment\n\n/* My\n multiline\ncomment */",
-      correctness_upvotes: [],
-      correctness_downvotes: [],
-      design_upvotes: [],
-      design_downvotes: [],
-      feature_id: 1,
-      language_id: 2,
-      ratings: [],
-      source: "",
-      style_upvotes: [],
-      style_downvotes: [],
-      user_id: 1
-    },
-    {
-      id: 3,
-      content: "# My Python comment",
-      correctness_upvotes: [],
-      correctness_downvotes: [],
-      design_upvotes: [],
-      design_downvotes: [],
-      feature_id: 1,
-      language_id: 3,
-      ratings: [],
-      source: "",
-      style_upvotes: [],
-      style_downvotes: [],
-      user_id: 1
-    },
-    {
-      id: 4,
-      content: "int i = 42;",
-      correctness_upvotes: [],
-      correctness_downvotes: [],
-      design_upvotes: [],
-      design_downvotes: [],
-      feature_id: 2,
-      language_id: 1,
-      ratings: [],
-      source: "",
-      style_upvotes: [],
-      style_downvotes: [],
-      user_id: 1
-    },
-    {
-      id: 5,
-      content: "const i = 42;",
-      correctness_upvotes: [],
-      correctness_downvotes: [],
-      design_upvotes: [],
-      design_downvotes: [],
-      feature_id: 2,
-      language_id: 2,
-      ratings: [],
-      source: "",
-      style_upvotes: [],
-      style_downvotes: [],
-      user_id: 1
-    },
-    {
-      id: 6,
-      content: "i = 42",
-      correctness_upvotes: [],
-      correctness_downvotes: [],
-      design_upvotes: [],
-      design_downvotes: [],
-      feature_id: 2,
-      language_id: 3,
-      ratings: [],
-      source: "",
-      style_upvotes: [],
-      style_downvotes: [],
-      user_id: 1
-    },
-    {
-      id: 7,
-      content: "/* Another\n * Style\n * C comment\n */",
-      correctness_upvotes: [],
-      correctness_downvotes: [],
-      design_upvotes: [],
-      design_downvotes: [],
-      feature_id: 1,
-      language_id: 1,
-      source: "",
-      style_upvotes: [],
-      style_downvotes: [],
-      user_id: 1
-    }
-  ]
-};
+const db = require("knex")({
+  client: "pg",
+  connection: {
+    host: "127.0.0.1",
+    user: "",
+    password: "",
+    database: "codeswitch-db"
+  }
+});
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -148,19 +29,21 @@ app.get("/", (req, res) => {
 
 // -> [codesample]
 app.post("/code_samples/search", (req, res) => {
-  const feature_ids = req.body.feature_ids.map(i => parseInt(i));
-  const language_ids = req.body.language_ids.map(i => parseInt(i));
-  const results = database.code_samples.filter(
-    cs =>
-      feature_ids.includes(cs.feature_id) &&
-      language_ids.includes(cs.language_id)
-  );
-  res.json(results);
+  const { feature_ids, language_ids } = req.body;
+  db("code_samples")
+    .select("*")
+    .whereIn("feature_id", feature_ids)
+    .whereIn("language_id", language_ids)
+    .then(results => res.json(results))
+    .catch(err => res.status(400).json("Connection error."));
 });
 
 // -> [codesample]
 app.get("/code_samples", (req, res) => {
-  res.json(database.code_samples);
+  db("code_samples")
+    .select("*")
+    .then(samples => res.json(samples))
+    .catch(err => res.status(400).json("Connection error."));
 });
 
 // Create new code sample
@@ -169,295 +52,279 @@ app.post("/code_samples", (req, res) => {
   const { content, feature_id, language_id, source, user_id } = req.body;
 
   // Validations
-  const errors = [];
   if (!content || !feature_id || !language_id || !user_id) {
-    errors.push("Missing required data.");
+    return res.status(400).json("Missing fields.");
   }
 
-  if (errors.length) {
-    return res.status(500).json(errors);
-  }
-
-  database.code_samples.push({
-    id: database.code_samples[database.code_samples.length - 1].id + 1,
-    content: content,
-    feature_id: parseInt(feature_id),
-    language_id: parseInt(language_id),
-    source: source,
-    user_id: parseInt(user_id),
-    correctness_upvotes: [],
-    correctness_downvotes: [],
-    design_upvotes: [],
-    design_downvotes: [],
-    style_upvotes: [],
-    style_downvotes: []
-  });
-
-  res.json("Success.");
+  db("code_samples")
+    .insert({ content, feature_id, language_id, source, user_id })
+    .then(data => res.json("Success."))
+    .catch(err => res.status(400).json("Couldn't add code sample."));
 });
 
 // -> code_sample || error
 app.get("/code_samples/:id/", (req, res) => {
-  const id = parseInt(req.params.id);
-  const code_sample = database.code_samples.find(cs => cs.id === id);
-  if (code_sample) {
-    res.json(code_sample);
-  } else {
-    res.status(404).json("Not found.");
-  }
-});
-
-// TODO -> success || error
-app.put("/code_samples/:id/", (req, res) => {
-  let success = true;
-  if (success) {
-    res.json("Success.");
-  } else {
-    res.status(500).json("Server error.");
-  }
-});
-
-// TODO -> success || error
-app.put("/code_samples/:id/", (req, res) => {
-  let success = true;
-  if (success) {
-    res.json("Success.");
-  } else {
-    res.status(500).json("Server error.");
-  }
+  db("code_samples")
+    .select("*")
+    .where("id", req.params.id)
+    .then(cs => {
+      if (cs.length) {
+        res.json(cs[0]);
+      } else {
+        res.status(404).json("Not found.");
+      }
+    })
+    .catch(err => res.status(404).json("Connection error."));
 });
 
 // -> [Feature]
 app.get("/features", (req, res) => {
-  res.json(database.features);
+  db("features")
+    .select("*")
+    .orderBy("name")
+    .then(features => res.json(features))
+    .catch(err => res.status(400).json("Connection error."));
 });
 
+// Add new feature.
 // -> Feature || Error
 app.post("/features", (req, res) => {
-  const { name } = req.body;
-  if (name) {
-    const new_feature = {
-      id: database.features[database.features.length - 1].id + 1,
-      name: name
-    };
-    database.features.push(new_feature);
-    res.json(new_feature);
-  } else {
-    res.status(400).json("Bad Request.");
+  const { name, description } = req.body;
+  if (!name || !description) {
+    return res.status(400).json("Bad Request.");
   }
+  db("features")
+    .insert({ name, description })
+    .returning("*")
+    .then(feat => res.json(feat[0]))
+    .catch(err => res.status(400).json("Server couldn't add feature."));
 });
 
+// Update feature.
 // -> Feature || Error
-app.patch("/features/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const name = req.body.name;
-  const feature = database.features.find(f => f.id === id);
-  if (id && feature && name) {
-    feature.name = name;
-    res.json(feature);
-  } else {
-    res.status(400).json("Bad Request.");
-  }
+app.post("/features/:id", (req, res) => {
+  const { name, description } = req.body;
+  db("features")
+    .where("id", req.params)
+    .update({ name, description })
+    .returning("*")
+    .then(feat => res.json(feat[0]))
+    .catch(err => res.status(400).json("Server couldn't update feature."));
 });
 
 // -> Success || Error
 app.delete("/features/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const feature = database.features.find(f => f.id === id);
-  if (id && feature) {
-    const updated_features = database.features.filter(f => f.id !== id);
-    database.features = updated_features;
-    res.json("Success");
-  } else {
-    res.status(400).json("Bad Request.");
-  }
+  db("features")
+    .where("id", req.params.id)
+    .del()
+    .then(response => res.json("Success."))
+    .catch(err => res.status(400).json("Server couldn't delete feature."));
 });
 
 // -> [language]
 app.get("/languages", (req, res) => {
-  res.json(database.languages);
+  db("languages")
+    .select("*")
+    .orderBy("name")
+    .then(languages => res.json(languages))
+    .catch(err => res.status(400).json("Connection error."));
 });
 
 // -> Feature || Error
 app.post("/languages", (req, res) => {
   const { name } = req.body;
-  if (name) {
-    const new_language = {
-      id: database.languages[database.languages.length - 1].id + 1,
-      name: name
-    };
-    database.languages.push(new_language);
-    res.json(new_language);
-  } else {
-    res.status(400).json("Bad Request.");
+  const syntax_code = req.body.syntax_code || name;
+  if (!name) {
+    return res.status(400).json("Bad Request.");
   }
+  db("languages")
+    .insert({ name, syntax_code })
+    .returning("*")
+    .then(lang => res.json(lang[0]))
+    .catch(err => res.status(400).json("Server couldn't add language."));
 });
 
-// -> Language || Error
-app.patch("/languages/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const name = req.body.name;
-  const language = database.languages.find(f => f.id === id);
-  if (id && language && name) {
-    language.name = name;
-    res.json(language);
-  } else {
-    res.status(400).json("Bad Request.");
-  }
+// Update language
+// -> Feature || Error
+app.post("/languages/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, syntax_code } = req.body;
+  db("languages")
+    .where("id", "=", id)
+    .update({ name, syntax_code })
+    .returning("*")
+    .then(feat => res.json(feat[0]))
+    .catch(err => res.status(400).json("Server couldn't update language"));
 });
 
 // -> Success || Error
 app.delete("/languages/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const language = database.languages.find(f => f.id === id);
-  if (id && language) {
-    const updated_languages = database.languages.filter(f => f.id !== id);
-    database.languages = updated_languages;
-    res.json("Success");
-  } else {
-    res.status(400).json("Bad Request.");
-  }
+  db("languages")
+    .where("id", req.params.id)
+    .del()
+    .then(response => res.json("Success."))
+    .catch(err => res.status(400).json("Server couldn't delete langauge."));
 });
 
 // -> User || Error
 app.post("/signin", (req, res) => {
   const { email, password } = req.body;
-  const user = database.users.find(u => u.email == email);
-  if (!user) {
-    return res.status(404).json("Authentication failed.");
+  if (!email || !password) {
+    return res.status(400).json("Missing required fields.");
   }
-  const hash = user.hash;
-  const valid = bcrypt.compareSync(password, hash);
-  if (valid) {
-    res.json(user);
-  } else {
-    res.status(404).json("Authentication failed.");
-  }
+  // Get user
+  db("users")
+    .select("email", "hash")
+    .where("email", email)
+    .then(user => {
+      // Check password
+      const valid = bcrypt.compareSync(password, user[0].hash);
+      // If valid return user
+      if (valid) {
+        return db
+          .select(["id", "username"])
+          .from("users")
+          .where("email", email)
+          .then(user => res.json(user[0]))
+          .catch(err => res.status(400).json("Unable to get user."));
+      } else {
+        res.status(400).json("Authentication failed.");
+      }
+    })
+    .catch(err => res.status(400).json("Authentication failed."));
 });
 
 // -> User || Error
 app.post("/signup", (req, res) => {
   const { email, password, username } = req.body;
 
-  // Validations
-  const errors = [];
-  if (!email || email.length === 0) {
-    errors.push("Invalid email.");
-  }
-  if (database.users.find(u => u.email === email)) {
-    errors.push("Email taken.");
-  }
-  if (!password || password.length === 0) {
-    errors.push("Invalid password.");
-  }
-  if (!username) {
-    errors.push("Missing username.");
-  }
-  if (database.users.find(u => u.username === username)) {
-    errors.push("Username taken.");
+  // Validate non-blanks
+  if (!email || !password || !username) {
+    return res.status(400).json("Missing required fields.");
   }
 
-  // Response
-  if (errors.length === 0) {
-    const hash = bcrypt.hashSync(password);
-    const user = {
-      admin: false,
-      email: email,
-      hash: hash,
-      id: database.users[database.users.length - 1].id + 1,
-      moderator: false,
-      username: username
-    };
-    database.users.push(user);
-    res.json(user);
-  } else {
-    res.status(406).send(errors);
-  }
+  // Database submit
+  db("users")
+    .select("email", "username")
+    .then(users => {
+      // Validate unique email
+      if (users.find(u => u.email === email)) {
+        return res.status(400).json("Email taken.");
+        // Validate unique username
+      } else if (users.find(u => u.username === username)) {
+        return res.status(400).json("Username taken.");
+        // Insert new user
+      } else {
+        const hash = bcrypt.hashSync(password);
+        db("users")
+          .insert({ email, hash, username })
+          .returning(["id", "username"])
+          .then(user => res.json(user[0]))
+          .catch(err => res.status(400).json("Signup failed."));
+      }
+    })
+    .catch(err => res.status(400).json("Connection error."));
 });
 
 // -> [{id: Int, username: String }]
 app.get("/usernames", (req, res) => {
-  const usernames = database.users.map(u => {
-    return { id: u.id, username: u.username };
-  });
-  if (usernames) {
-    res.json(usernames);
-  } else {
-    res.status(400).json("Bad request");
-  }
+  db("users")
+    .select(["id", "username"])
+    .then(users => res.json(users))
+    .catch(err => res.status(400).json("Connection error."));
 });
 
 // -> Success || Error
 app.post("/vote", (req, res) => {
-  // Validations
-  const cs_id = parseInt(req.body.cs_id);
-  const cs = database.code_samples.find(cs => cs.id === cs_id);
-  const user_id = parseInt(req.body.user_id);
-  const user = database.users.find(u => u.id === user_id);
+  const { cs_id, user_id, correctness, design, style } = req.body;
 
-  // Response
-  if (cs && user) {
-    const { correctness, design, style } = req.body;
-    if (correctness === "upvote") {
-      cs.correctness_downvotes = cs.correctness_downvotes.filter(
-        id => id !== user_id
-      );
-      if (!cs.correctness_upvotes.includes(user_id)) {
-        cs.correctness_upvotes.push(user_id);
+  // Validate code sample
+  db("code_samples")
+    .select("*")
+    .where("id", cs_id)
+    .then(cs => {
+      if (cs.length) {
+        let correctness_upvotes = cs[0].correctness_upvotes;
+        let correctness_downvotes = cs[0].correctness_downvotes;
+        let design_upvotes = cs[0].design_upvotes;
+        let design_downvotes = cs[0].design_downvotes;
+        let style_upvotes = cs[0].style_upvotes;
+        let style_downvotes = cs[0].style_downvotes;
+        if (correctness === "upvote") {
+          correctness_downvotes = correctness_downvotes.filter(
+            id => id !== user_id
+          );
+          if (!correctness_upvotes.includes(user_id)) {
+            correctness_upvotes.push(user_id);
+          }
+        }
+        if (correctness === "novote") {
+          correctness_upvotes = correctness_upvotes.filter(
+            id => id !== user_id
+          );
+          correctness_downvotes = correctness_downvotes.filter(
+            id => id !== user_id
+          );
+        }
+        if (correctness === "downvote") {
+          correctness_upvotes = correctness_upvotes.filter(
+            id => id !== user_id
+          );
+          if (!correctness_downvotes.includes(user_id)) {
+            correctness_downvotes.push(user_id);
+          }
+        }
+        if (design === "upvote") {
+          design_downvotes = design_downvotes.filter(id => id !== user_id);
+          if (!design_upvotes.includes(user_id)) {
+            design_upvotes.push(user_id);
+          }
+        }
+        if (design === "novote") {
+          design_upvotes = design_upvotes.filter(id => id !== user_id);
+          design_downvotes = design_downvotes.filter(id => id !== user_id);
+        }
+        if (design === "downvote") {
+          design_upvotes = design_upvotes.filter(id => id !== user_id);
+          if (!design_downvotes.includes(user_id)) {
+            design_downvotes.push(user_id);
+          }
+        }
+        if (style === "upvote") {
+          style_downvotes = style_downvotes.filter(id => id !== user_id);
+          if (!style_upvotes.includes(user_id)) {
+            style_upvotes.push(user_id);
+          }
+        }
+        if (style === "novote") {
+          style_upvotes = style_upvotes.filter(id => id !== user_id);
+          style_downvotes = style_downvotes.filter(id => id !== user_id);
+        }
+        if (style === "downvote") {
+          style_upvotes = style_upvotes.filter(id => id !== user_id);
+          if (!style_downvotes.includes(user_id)) {
+            style_downvotes.push(user_id);
+          }
+        }
+        // Update database
+        return db("code_samples")
+          .where("id", cs_id)
+          .returning("*")
+          .update({
+            correctness_upvotes: JSON.stringify(correctness_upvotes),
+            correctness_downvotes: JSON.stringify(correctness_downvotes),
+            design_upvotes: JSON.stringify(design_upvotes),
+            design_downvotes: JSON.stringify(design_downvotes),
+            style_upvotes: JSON.stringify(style_upvotes),
+            style_downvotes: JSON.stringify(style_downvotes)
+          })
+          .then(cs => res.json("Success"))
+          .catch(err => res.status(400).json("Vote update failed."));
+      } else {
+        res.status(400).json("Couldn't find code sample.");
       }
-    }
-    if (correctness === "novote") {
-      cs.correctness_upvotes = cs.correctness_upvotes.filter(
-        id => id !== user_id
-      );
-      cs.correctness_downvotes = cs.correctness_downvotes.filter(
-        id => id !== user_id
-      );
-    }
-    if (correctness === "downvote") {
-      cs.correctness_upvotes = cs.correctness_upvotes.filter(
-        id => id !== user_id
-      );
-      if (!cs.correctness_downvotes.includes(user_id)) {
-        cs.correctness_downvotes.push(user_id);
-      }
-    }
-    if (design === "upvote") {
-      cs.design_downvotes = cs.design_downvotes.filter(id => id !== user_id);
-      if (!cs.design_upvotes.includes(user_id)) {
-        cs.design_upvotes.push(user_id);
-      }
-    }
-    if (design === "novote") {
-      cs.design_upvotes = cs.design_upvotes.filter(id => id !== user_id);
-      cs.design_downvotes = cs.design_downvotes.filter(id => id !== user_id);
-    }
-    if (design === "downvote") {
-      cs.design_upvotes = cs.design_upvotes.filter(id => id !== user_id);
-      if (!cs.design_downvotes.includes(user_id)) {
-        cs.design_downvotes.push(user_id);
-      }
-    }
-    if (style === "upvote") {
-      cs.style_downvotes = cs.style_downvotes.filter(id => id !== user_id);
-      if (!cs.style_upvotes.includes(user_id)) {
-        cs.style_upvotes.push(user_id);
-      }
-    }
-    if (style === "novote") {
-      cs.style_upvotes = cs.style_upvotes.filter(id => id !== user_id);
-      cs.style_downvotes = cs.style_downvotes.filter(id => id !== user_id);
-    }
-    if (style === "downvote") {
-      cs.style_upvotes = cs.style_upvotes.filter(id => id !== user_id);
-      if (!cs.style_downvotes.includes(user_id)) {
-        cs.style_downvotes.push(user_id);
-      }
-    }
-    res.json("Success.");
-  } else {
-    res.status(400).json("Bad Request.");
-  }
+    })
+    .catch(err => res.status(400).json("Vote failed on server."));
 });
 
 // Launch
