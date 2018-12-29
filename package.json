@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "brew services start postgresql && nodemon server.js",
-    "stop": "brew services stop postgresql"
+    "start": "nodemon server.js",
+    "db_start": "brew services start postgresql",
+    "db_stop": "brew services stop postgresql"
   },
   "keywords": [],
   "author": "",

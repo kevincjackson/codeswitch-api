@@ -1,6 +1,6 @@
+const PORT = process.env.PORT || 3000;
 const express = require("express");
 const app = express();
-const port = 3000;
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt-nodejs");
 const cors = require("cors");
@@ -47,4 +47,4 @@ app.get("/usernames", (req, res) => users.handleUsernames(req, res, db));
 app.post("/vote", (req, res) => vote.handlePost(req, res, db))
 
 // Launch
-app.listen(port);
+app.listen(PORT);
