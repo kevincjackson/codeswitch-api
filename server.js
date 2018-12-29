@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt-nodejs");
 const cors = require("cors");
 var db;
 // Heroku Production Database
-if (process.env.DATABASE) {
+if (process.env.DATABASE_URL) {
   db = require("knex")({
     connectionString: process.env.DATABASE_URL,
     ssl: true
