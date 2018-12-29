@@ -8,6 +8,7 @@ var db;
 // Heroku Production Database
 if (process.env.DATABASE_URL) {
   db = require("knex")({
+    client: "pg",
     connectionString: process.env.DATABASE_URL,
     ssl: true
   });
