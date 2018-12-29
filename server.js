@@ -9,10 +9,12 @@ var db;
 if (process.env.DATABASE_URL) {
   db = require("knex")({
     client: "pg",
-    connectionString: process.env.DATABASE_URL,
-    ssl: true
+    connection: {
+      connectionString: process.env.DATABASE_URL,
+      ssl: true
+    }
   });
-// Local Database
+  // Local Database
 } else {
   db = require("knex")({
     client: "pg",
