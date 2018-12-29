@@ -1,6 +1,5 @@
 const code_samples = {};
 
-
 // -> [codesample]
 code_samples.handleSearch = (req, res, db) => {
   const { feature_ids, language_ids } = req.body;
@@ -12,7 +11,6 @@ code_samples.handleSearch = (req, res, db) => {
     .catch(err => res.status(400).json("Connection error."));
 };
 
-
 // -> [codesample]
 code_samples.handleGet = (req, res, db) => {
   db("code_samples")
@@ -20,7 +18,6 @@ code_samples.handleGet = (req, res, db) => {
     .then(samples => res.json(samples))
     .catch(err => res.status(400).json("Connection error."));
 };
-
 
 // Create new code sample
 // -> success || error
@@ -38,7 +35,6 @@ code_samples.handlePost = (req, res, db) => {
     .catch(err => res.status(400).json("Couldn't add code sample."));
 };
 
-
 // -> code_sample || error
 code_samples.handleIdGet = (req, res, db) => {
   db("code_samples")
@@ -53,7 +49,5 @@ code_samples.handleIdGet = (req, res, db) => {
     })
     .catch(err => res.status(404).json("Connection error."));
 };
-
-
 
 module.exports = code_samples;
