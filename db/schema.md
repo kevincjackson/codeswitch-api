@@ -20,7 +20,7 @@ CREATE TABLE features (
 CREATE TABLE languages (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    syntax_code VARCHAR(100) DEFAULT ""
+    syntax_code VARCHAR(100) DEFAULT ''
 );
 
 CREATE TABLE code_samples (
