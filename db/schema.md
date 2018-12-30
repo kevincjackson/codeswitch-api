@@ -30,12 +30,12 @@ CREATE TABLE code_samples (
     user_id INT NOT NULL,
     content TEXT NOT NULL,
     source TEXT DEFAULT '',
-    correctness_upvotes TEXT DEFAULT '[]',
-    correctness_downvotes TEXT DEFAULT '[]',
-    design_upvotes TEXT DEFAULT '[]',
-    design_downvotes TEXT DEFAULT '[]',
-    style_upvotes TEXT DEFAULT '[]',
-    style_downvotes TEXT DEFAULT '[]'
+    correctness_upvotes JSON DEFAULT '[]',
+    correctness_downvotes JSON DEFAULT '[]',
+    design_upvotes JSON DEFAULT '[]',
+    design_downvotes JSON DEFAULT '[]',
+    style_upvotes JSON DEFAULT '[]',
+    style_downvotes JSON DEFAULT '[]'
 );
 
 ```
